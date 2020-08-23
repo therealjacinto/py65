@@ -45,15 +45,15 @@ class MPU:
         self.reset()
 
     def reprformat(self):
-        return ("%s PC  AC XR YR SP NV-BDIZC\n"
-                "%s: %04x %02x %02x %02x %02x %s")
+        return ("%s PC  AC XR YR SP NV-BDIZC LCD\n"
+                "%s: %04x %02x %02x %02x %02x %s %s")
 
     def __repr__(self):
         flags = itoa(self.p, 2).rjust(self.BYTE_WIDTH, '0')
         indent = ' ' * (len(self.name) + 2)
 
         return self.reprformat() % (indent, self.name, self.pc, self.a,
-                                    self.x, self.y, self.sp, flags)
+                                    self.x, self.y, self.sp, flags, self.lcdBuffer)
 
     def step(self):
         instructCode = self.memory[self.pc]
@@ -73,6 +73,7 @@ class MPU:
         self.y = 0
         self.p = self.BREAK | self.UNUSED
         self.processorCycles = 0
+        self.lcdBuffer = ""
 
     # Helpers for addressing modes
 
@@ -892,6 +893,8 @@ class MPU:
     def inst_0x8d(self):
         self.opSTA(self.AbsoluteAddr)
         self.pc += 2
+        if self.a == 160:
+            self.lcdBuffer += chr(self.ByteAt(24576))
 
     @instruction(name="STX", mode="abs", cycles=4)
     def inst_0x8e(self):
